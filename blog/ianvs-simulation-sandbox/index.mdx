@@ -1,0 +1,163 @@
+---
+authors: [PragnyaKhandelwal]
+categories:
+  - LFX
+  - Ianvs
+date: 2026-09-30
+draft: false
+tags:
+  - KubeEdge
+  - Ianvs
+  - Simulation
+  - Edge AI
+  - Benchmarking
+  - System Metrics
+  - LFX Mentorship
+title: "Simulating the Edge: Benchmarking AI on a KubeEdge Cluster with Ianvs"
+description: "How KubeEdge-Ianvs benchmarks AI algorithms on a simulated edge-cloud cluster, and how it measures system-level metrics such as CPU, memory, GPU, storage and network use alongside accuracy."
+---
+
+<!-- TODO (before review): hero image, demo recording and a small gallery of real pcb-aoi results from the simulated cluster go here, following the Ianvs mentors' feedback on kubeedge/website#752 to put pictures and video first. -->
+
+This post shares how I restored the simulation layer of KubeEdge-Ianvs, so that AI benchmarks can run on a simulated edge-cloud cluster built with kind, KubeEdge and Sedna on a single Linux host. It also introduces the system-level metrics we are adding, such as CPU, memory, GPU, storage and network use, so that a benchmark tells you not only how accurate an algorithm is, but also whether it fits on an edge device.
+
+This work is part of my CNCF LFX mentorship with KubeEdge SIG AI.
+
+## Why system-level metrics matter for edge-cloud AI
+
+Ianvs already measures how well an algorithm performs, for example its accuracy, F1 score or latency. For edge-cloud AI that is only half of the picture:
+
+- **An accurate model can still fail on the edge.** An edge device has a fixed amount of memory, a few CPU cores, maybe a small GPU and a limited power budget. A model that is 2% more accurate but needs twice the memory may not run there at all.
+- **Edge-cloud systems depend on the network.** Joint inference sends some queries to the cloud, and federated learning exchanges model updates every round. How much data moves, and how a slow or delayed link affects results, matters as much as accuracy.
+- **Heavy test cases need a fault boundary.** Today every Ianvs test case runs in one host process. If one large model runs out of memory, the whole benchmarking job stops, and the results of test cases that already finished are lost.
+
+## Test environment
+
+<!-- TODO: fill in from the actual runs used for the results in this post (exact hardware, exact OS release, e.g. Ubuntu 22.04, and exact versions). -->
+
+### Hardware
+
+### Operating system
+
+### Software versions
+
+| Component | Version |
+| --- | --- |
+| Docker | |
+| kind | |
+| KubeEdge | v1.14.0 |
+| Sedna | installed by the Sedna all-in-one script |
+| Python | |
+| Ianvs | |
+
+## How the simulation works
+
+Ianvs already had the start of a simulation layer, built during OSPP 2022. When a benchmarking job contains a `simulation:` block, Ianvs:
+
+1. checks the host: Docker, kind, CPU cores and memory;
+2. builds a local cluster with kind, KubeEdge and Sedna using the Sedna all-in-one script, with the number of cloud and edge nodes taken from the config;
+3. runs the benchmark;
+4. tears the cluster down when the job ends, even if the job fails.
+
+<!-- TODO: add the architecture and user-flow figures from the Ianvs Simulation Sandbox proposal (docs/proposals/simulation/sandbox-engine/). -->
+
+The next step, described in the Ianvs Simulation Sandbox proposal, is to run each test case as a workload on the simulated edge nodes. That gives every test case its own fault boundary and a place to measure its resource use.
+
+## What was restored, and how
+
+Four years of changes in Ianvs, KubeEdge and Sedna had broken the original code. These are the main problems and fixes:
+
+| Problem | Fix |
+| --- | --- |
+| The Sedna installer URL pointed to a `master` branch that no longer exists | Download the installer from the `main` branch |
+| KubeEdge v1.16 and later fail to deploy: `keadm` downloads a device CRD file that was renamed upstream and gets an HTTP 404 | Pin the default KubeEdge version to v1.14.0, the newest version verified to deploy end-to-end |
+| The Docker and kind checks used `check=True` together with a return-code test, so a missing tool crashed instead of being reported | Check for each tool explicitly and stop with a clear error and an installation link |
+| Commands ran through a shell with `curl ... \| bash` | Download the installer with `curl -fsSL`, which fails on HTTP errors, and run it without a shell, passing settings as environment variables |
+| The CPU check parsed `lscpu` output and the memory check read `MemFree` | Count the CPU cores the process may use and read `MemAvailable`; inside a container, also respect the container's CPU and memory limits (cgroups) |
+| A failed cluster build left a half-built cluster behind | Clean up the partial cluster before reporting the error |
+| One failing test case stopped the whole job and discarded finished results | Report the failure and keep ranking the test cases that completed |
+| Invalid config values, such as `edge_nodes: 5` instead of `edge_number: 5`, were silently ignored | Validate the config: node counts must be integers within the installer's limits (0 to 2 cloud workers, 0 to 3 edge nodes), empty names are rejected, and unknown keys produce a warning |
+
+<!-- TODO: add first-person notes on how each problem was found, with one or two terminal screenshots (for example the keadm 404). -->
+
+## Results: pcb-aoi on a simulated edge-cloud cluster
+
+<!-- TODO: report box with the headline numbers, a metric table and charts from real runs of examples/pcb-aoi/incremental_learning_bench on the simulated cluster. Only measured output goes here. -->
+
+## System metrics and paradigm-aware resource budgets
+
+The simulation sandbox adds system-level metrics that are measured from outside the algorithm, so they work the same way for every Ianvs paradigm: single-task, incremental, lifelong, federated and federated class-incremental learning, joint inference and multi-edge inference. They include:
+
+- **Time:** total wall time, and time per phase where a paradigm's phases can be seen from outside, such as training and inference.
+- **CPU and memory:** average and peak CPU utilization, and peak memory (the high watermark), which decides whether a model fits on a device.
+- **GPU:** utilization, peak GPU memory, power and energy.
+- **Storage:** peak disk usage of the working folder, disk reads and writes, and the size of the saved model files.
+- **Network:** bandwidth and emulated latency, and for federated learning, the size of the model updates exchanged each round.
+
+Each paradigm also gets a default resource budget, because paradigms behave differently. Single-task learning is light on memory, lifelong learning and LLM inference are heavy, and federated learning is CPU-bound. A test case can always override the default.
+
+The full list, with a worked example for every metric, is in the metric glossary of the Ianvs Simulation Sandbox proposal.
+
+<!-- TODO: add a chart of observed peak memory per paradigm against the default budgets once the profiler runs. -->
+
+## Try it yourself
+
+These steps are short. The Ianvs guide [How to build simulation env](https://github.com/kubeedge/ianvs/blob/main/docs/guides/how-to-build-simulation-env.md) has the full instructions.
+
+### Step 1: Install Ianvs
+
+Follow the [Ianvs installation guide](https://github.com/kubeedge/ianvs/blob/main/docs/guides/how-to-install-ianvs.md).
+
+### Step 2: Check the host
+
+The simulation needs a Linux host with Docker and kind installed, at least 4 CPU cores and at least 4 GB of available memory.
+
+```bash
+sudo docker version
+kind version
+```
+
+### Step 3: Add the simulation block
+
+Add a `simulation:` block to your `benchmarkingjob.yaml`:
+
+```yaml
+benchmarkingjob:
+  ...
+  simulation:
+    cloud_number: 1
+    edge_number: 2
+    cluster_name: "ianvs-simulation"
+    kubeedge_version: "v1.14.0"
+    sedna_version: "latest"
+```
+
+### Step 4: Run the benchmark
+
+```bash
+ianvs -f ./examples/pcb-aoi/incremental_learning_bench/fault_detection/benchmarkingjob.yaml
+```
+
+Ianvs checks the host, builds the cluster, runs the benchmark and tears the cluster down.
+
+<!-- TODO: screenshots of the host checks passing, `kubectl get nodes` showing the cloud and edge nodes while the job runs, and the final leaderboard. -->
+
+## What this tells us
+
+<!-- TODO: numbered conclusions drawn from the results. -->
+
+## Current limitations and next steps
+
+The simulator now builds and tears down reliably, but it is not yet a full sandbox:
+
+- It needs a Linux host, and the Sedna installer limits the cluster to 2 cloud workers and 3 edge nodes.
+- KubeEdge is pinned to v1.14.0 until `keadm` in newer releases downloads the renamed CRD file correctly.
+- Test cases still run in the Ianvs host process. Running them as workloads on the simulated edge nodes needs the Simulation Job Administrator, which is the next milestone.
+- The system metrics described above are being built; the profiler is not in a release yet.
+- Per-round timing for federated learning, and running several test cases in parallel, are future work.
+
+## Conclusion
+
+<!-- TODO: one short closing paragraph and thanks to the mentors, once the results are in. -->
+
+This work is part of the KubeEdge-Ianvs distributed synergy AI benchmarking initiative and my CNCF LFX mentorship with KubeEdge SIG AI.
