@@ -15,12 +15,37 @@ tags:
   - Benchmarking
   - LFX Mentorship
 title: "Simulating the Edge: Benchmarking AI on a KubeEdge Cluster with Ianvs"
-description: "How I restored the KubeEdge-Ianvs simulator so that AI benchmarks run with a simulated edge-cloud cluster built with kind, KubeEdge and Sedna on a single Linux host, and what comes next."
+description: "No edge devices, no manual setup, no leftovers: the restored KubeEdge-Ianvs simulator builds an edge-cloud cluster on one laptop in about 2.5 minutes, runs your AI benchmark on it, and cleans up after itself."
 ---
 
-This post shares how I restored the simulation layer of KubeEdge-Ianvs during my CNCF LFX mentorship. Ianvs can once again build a simulated edge-cloud cluster with kind, KubeEdge and Sedna on a single Linux host, run an AI benchmark with it, and remove the cluster when the job ends. It also explains what the simulator does not do yet, and where it is heading.
+![KubeEdge-Ianvs builds an edge-cloud cluster on one laptop, runs a benchmark on it and removes it with one command](./hero.svg)
+
+Testing an AI algorithm on a real edge-cloud cluster usually means buying machines, installing three projects by hand, and cleaning up afterwards. With the KubeEdge-Ianvs simulator, it takes **one laptop, one command and about two and a half minutes**. This post shows how I brought the simulator back to life during my CNCF LFX mentorship, what it saves you, and where it is heading next.
 
 <!--truncate-->
+
+## Why you need a simulator: the cost of not having one
+
+Ianvs benchmarks AI algorithms for edge-cloud collaboration. Accuracy scores are only half the story for edge AI. You also need to know how an algorithm behaves on a cluster with a cloud side and edge nodes. Without a simulator, that is expensive in both time and money:
+
+| | Without the simulator | With the Ianvs simulator |
+| --- | --- | --- |
+| **Hardware** | A cloud machine plus one device per edge node, so 4 machines for a 1-cloud, 3-edge test cluster | **1 laptop.** I used a 4-core Intel Core i3 with 16 GB of RAM. |
+| **Extra cost** | Buying or renting every machine | **$0** in extra hardware |
+| **Setup** | Install Kubernetes, KubeEdge and Sedna by hand on every machine | **One command**: `ianvs -f benchmarkingjob.yaml` |
+| **Finding versions that work together** | Trial and error. During this work, every KubeEdge release line from v1.16 to v1.23 (8 lines) failed with Sedna's installer. | **Built in.** Ianvs defaults to the combination verified end to end: KubeEdge v1.14.0, Sedna v0.7.0, Kubernetes v1.21. |
+| **Time to a ready cluster** | Hours to days of manual setup | **About 2.5 minutes** after the host checks |
+| **Cleanup** | Uninstall and reset each machine by hand | **Automatic, in about 20 seconds**, even when the job fails |
+
+### The everyday problems it solves
+
+These are problems algorithm developers and contributors run into all the time:
+
+- **"I don't have edge devices."** Most contributors don't. The simulator runs the cloud and edge nodes as containers on the machine you already have.
+- **"It worked on my machine."** Everyone builds the same cluster from the same settings and versions, so results can be compared and reproduced.
+- **"I made a typo and nothing told me."** Settings are now checked before anything is built. A key like `edge_nodes: 5` instead of `edge_number: 5` gets a warning, and node counts above what the installer supports are rejected with a clear message.
+- **"A leftover cluster is eating my memory."** The cluster is always removed when the job ends, and a half-built cluster is removed when a build fails.
+- **"One broken test case wiped out my results."** One failing test case no longer throws away the results of the test cases that already finished.
 
 ## The result first
 
@@ -47,15 +72,9 @@ Here is the whole run in under a minute: the same checks on the old code and on 
 
 ![The cluster and edge containers were removed after the job](./teardown.png)
 
-## Why a simulator matters for edge-cloud AI
+## Where the simulator came from
 
-Ianvs benchmarks AI algorithms for edge-cloud collaboration. It already reports how well an algorithm performs, for example its F1 score or latency. For edge AI that is only half of the picture:
-
-- **Accuracy alone does not tell you whether a model fits on an edge device.** An edge node has limited memory, a few CPU cores and a slow or unreliable link to the cloud.
-- **Real edge clusters are hard to get.** Most contributors do not have a fleet of edge devices. A cluster that runs on one laptop lets anyone try an edge-cloud setup.
-- **Benchmarks need a fault boundary.** Today every Ianvs test case runs in one process, so one model that runs out of memory stops the whole benchmarking job.
-
-Ianvs was designed with a simulation layer for exactly this, built during OSPP 2022 on top of Sedna's all-in-one installer. Four years of changes in Ianvs, KubeEdge and Sedna had broken it, so my first job was to bring it back.
+Ianvs was designed with a simulation layer from the start. It was built during OSPP 2022 on top of Sedna's all-in-one installer. Four years of changes in Ianvs, KubeEdge and Sedna had broken it, so the simulator could not even start on a current Linux system. My first job was to bring it back. In total, I fixed the 11 problems listed below.
 
 ## Test environment
 
