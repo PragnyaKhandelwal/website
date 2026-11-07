@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 340" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif">
+  <rect width="1200" height="340" rx="0" fill="#0b1f3a"/>
+  <text x="60" y="62" fill="#ffffff" font-size="30" font-weight="800">One command, start to finish</text>
+  <text x="60" y="94" fill="#b9cdf0" font-size="17">What happens after you run <tspan fill="#7ee2a8" font-family="Consolas, Menlo, monospace">ianvs -f benchmarkingjob.yaml</tspan></text>
+
+  <line x1="90" y1="190" x2="1110" y2="190" stroke="#3b5f93" stroke-width="4" stroke-linecap="round"/>
+
+  <g text-anchor="middle">
+    <circle cx="150" cy="190" r="34" fill="#2c4f86" stroke="#7fb3ff" stroke-width="3"/>
+    <text x="150" y="198" fill="#fff" font-size="22">1</text>
+    <text x="150" y="254" fill="#fff" font-size="18" font-weight="700">Check the host</text>
+    <text x="150" y="278" fill="#b9cdf0" font-size="14">Docker, kind, CPU, memory</text>
+    <text x="150" y="300" fill="#7ee2a8" font-size="15" font-weight="700">seconds</text>
+
+    <circle cx="430" cy="190" r="34" fill="#1e5aa8" stroke="#7fb3ff" stroke-width="3"/>
+    <text x="430" y="198" fill="#fff" font-size="22">2</text>
+    <text x="430" y="254" fill="#fff" font-size="18" font-weight="700">Build the cluster</text>
+    <text x="430" y="278" fill="#b9cdf0" font-size="14">kind + KubeEdge + Sedna</text>
+    <text x="430" y="300" fill="#7ee2a8" font-size="15" font-weight="700">about 2.5 min</text>
+
+    <circle cx="730" cy="190" r="34" fill="#178a5a" stroke="#7ee2a8" stroke-width="3"/>
+    <text x="730" y="198" fill="#fff" font-size="22">3</text>
+    <text x="730" y="254" fill="#fff" font-size="18" font-weight="700">Run your benchmark</text>
+    <text x="730" y="278" fill="#b9cdf0" font-size="14">leaderboard as usual</text>
+    <text x="730" y="300" fill="#7ee2a8" font-size="15" font-weight="700">as long as your test</text>
+
+    <circle cx="1030" cy="190" r="34" fill="#2c4f86" stroke="#7fb3ff" stroke-width="3"/>
+    <text x="1030" y="198" fill="#fff" font-size="22">4</text>
+    <text x="1030" y="254" fill="#fff" font-size="18" font-weight="700">Clean up</text>
+    <text x="1030" y="278" fill="#b9cdf0" font-size="14">even if the job fails</text>
+    <text x="1030" y="300" fill="#7ee2a8" font-size="15" font-weight="700">about 20 s</text>
+  </g>
+  <text x="1140" y="130" fill="#6f8bb8" font-size="13" text-anchor="end">Measured on a 4-core Intel Core i3 laptop, WSL 2</text>
+</svg>

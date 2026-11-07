@@ -20,6 +20,10 @@ description: "No edge devices, no manual setup, no leftovers: the restored KubeE
 
 ![KubeEdge-Ianvs builds an edge-cloud cluster on one laptop, runs a benchmark on it and removes it with one command](./hero.svg)
 
+Picture this. Your defect-detection model just scored **0.8755 F1** on your laptop, and your mentor asks the obvious next question: *"Great, but how does it behave on a real edge-cloud setup?"* You don't have a cloud server and a shelf of edge boards. You also don't have a free week to install Kubernetes, KubeEdge and Sedna on them, and then find out which versions actually work together.
+
+That is exactly the gap the KubeEdge-Ianvs simulator fills.
+
 Testing an AI algorithm on a real edge-cloud cluster usually means buying machines, installing three projects by hand, and cleaning up afterwards. With the KubeEdge-Ianvs simulator, it takes **one laptop, one command and about two and a half minutes**. This post shows how I brought the simulator back to life during my CNCF LFX mentorship, what it saves you, and where it is heading next.
 
 <!--truncate-->
@@ -109,6 +113,8 @@ You turn the simulator on by adding a `simulation:` block to your benchmarking j
 2. builds a local cluster with Sedna's all-in-one installer, using kind for the Kubernetes nodes and KubeEdge for the edge side;
 3. runs the benchmark;
 4. removes the cluster when the job ends, also when the job fails.
+
+![One command, start to finish: check the host, build the cluster in about 2.5 minutes, run the benchmark, clean up in about 20 seconds](./timeline.svg)
 
 ![Ianvs Simulation Sandbox: architecture overview](./architecture-overview.png)
 
