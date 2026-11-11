@@ -74,7 +74,7 @@
   <g font-size="12" fill="#ffffff" text-anchor="middle">
     <rect x="548" y="346" width="76" height="30" rx="15" fill="#2c4f86"/><text x="586" y="366">check</text>
     <rect x="640" y="346" width="76" height="30" rx="15" fill="#2c4f86"/><text x="678" y="366">build</text>
-    <rect x="732" y="346" width="84" height="30" rx="15" fill="#2c4f86"/><text x="774" y="366">benchmark</text>
+    <rect x="732" y="346" width="84" height="30" rx="15" fill="#2c4f86"/><text x="774" y="366">run Jobs</text>
     <rect x="832" y="346" width="66" height="30" rx="15" fill="#2c4f86"/><text x="865" y="366">clean</text>
   </g>
   <g stroke="#7fb3ff" stroke-width="2" marker-end="url(#arrow)">
@@ -89,10 +89,10 @@
   <g text-anchor="middle">
     <rect x="960" y="196" width="190" height="72" rx="10" fill="#0f2b52" stroke="#3b5f93"/>
     <text x="1055" y="232" fill="#7ee2a8" font-size="28" font-weight="700">1 laptop</text>
-    <text x="1055" y="256" fill="#b9cdf0" font-size="13">4 cores · 16 GB RAM</text>
+    <text x="1055" y="256" fill="#b9cdf0" font-size="13">4 cores · 8 GB for Linux</text>
 
     <rect x="960" y="280" width="190" height="72" rx="10" fill="#0f2b52" stroke="#3b5f93"/>
-    <text x="1055" y="316" fill="#7ee2a8" font-size="28" font-weight="700">~2.5 min</text>
+    <text x="1055" y="316" fill="#7ee2a8" font-size="28" font-weight="700">~4 min</text>
     <text x="1055" y="340" fill="#b9cdf0" font-size="13">to a ready cluster</text>
 
     <rect x="960" y="364" width="190" height="72" rx="10" fill="#0f2b52" stroke="#3b5f93"/>
@@ -101,9 +101,9 @@
 
     <rect x="960" y="448" width="190" height="72" rx="10" fill="#0f2b52" stroke="#3b5f93"/>
     <text x="1055" y="484" fill="#7ee2a8" font-size="28" font-weight="700">0 left over</text>
-    <text x="1055" y="508" fill="#b9cdf0" font-size="13">cluster removed after the job</text>
+    <text x="1055" y="508" fill="#b9cdf0" font-size="13">cluster removed in 6 seconds</text>
   </g>
 
-  <text x="510" y="520" fill="#b9cdf0" font-size="15">Measured on a 4-core Intel Core i3 laptop with WSL 2.</text>
+  <text x="510" y="520" fill="#b9cdf0" font-size="15">Measured on a 4-core Intel Core i3 laptop with WSL 2 (8 GB).</text>
   <text x="1140" y="580" fill="#6f8bb8" font-size="13" text-anchor="end">KubeEdge-Ianvs Simulation Sandbox</text>
 </svg>
